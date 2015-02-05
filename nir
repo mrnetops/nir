@@ -2,11 +2,13 @@
 
 use Socket;
 use Getopt::Long;
+use Data::Dumper;
 use strict;
 use warnings;
 
 ##
 ## Mr Netops nifty inline resolver
+## Todd.Jimenez@gmail.com
 ##
 
 %::commandLineOptions = (
@@ -37,9 +39,10 @@ use warnings;
 	'ipAddressRegexp=s',
 	'hostnameRegexp=s',
 	'format=s',
-	'verbose|v!',
-	'debug|d!',
+	'verbose!',
+	'debug!',
 	'timeout=i',
+	'help|?',
 );
 
 if (exists $ENV{'NIR'}) {
@@ -51,6 +54,33 @@ if (exists $ENV{'NIR'}) {
 GetOptions(
         @::getOptionsOptions
 ) or exit 1;
+
+if (exists $::commandLineOptions{help}) {
+    print "
+Mr. Netops nifty inline resolver
+options:
+	-ipAddressRegexp <regexp>
+		Specify an alternate ip address regular expression
+	-hostnameRegexp <regexp>
+		Specify an alternate hostname regular expression
+	-format
+		Specify alternate formatting for resolved values
+	-verbose
+		Print additional status information to stderr
+	-debug
+		Print debugging information to stderr
+	-timeout
+		Dns lookup timeout
+	-help
+		This
+";
+	exit 0;
+}
+	
+if (exists $::commandLineOptions{debug}) {
+	$Data::Dumper::Varname = 'Configuration';
+	print STDERR Dumper(\%::commandLineOptions);
+}
 
 while (<>) {
 	$_ =~ s/($::commandLineOptions{'ipAddressRegexp'}|$::commandLineOptions{'hostnameRegexp'})/&resolveMe($1)/ge;

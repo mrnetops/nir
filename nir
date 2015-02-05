@@ -1,0 +1,142 @@
+#!/usr/bin/env perl
+
+use Socket;
+use Getopt::Long;
+use strict;
+use warnings;
+
+##
+## Mr Netops nifty inline resolver
+##
+
+%::commandLineOptions = (
+
+	##
+	## per http://stackoverflow.com/questions/106179/regular-expression-to-match-hostname-or-ip-address
+	##
+	## with some regexp bug fixes
+	## 	* reversed the ip address octet subregexp to ensure we do a greedy match on the last octet
+	##		otherwise we only match up to the first digit of the last octet.
+	##	* added + to the [A-Za-z] hostname subregexp to ensure we do greedy matching on the top level domain
+	##		otherwise we only match up to the first letter of the top level domain.
+	##	* escape "." to prevent it doing an any character match instead of a literal "." match
+
+	'ipAddressRegexp' =>
+		'((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]|[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]|[0-9])',
+	'hostnameRegexp' =>
+		"(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\\.)+([A-Za-z]+|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])",
+		#"(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\\.)*([A-Za-z]+|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])",
+	'format' =>
+		'[%s]',
+	'timeout' =>
+		2,
+);
+
+@::getOptionsOptions = (
+	\%::commandLineOptions,
+	'ipAddressRegexp=s',
+	'hostnameRegexp=s',
+	'format=s',
+	'verbose|v!',
+	'debug|d!',
+	'timeout=i',
+);
+
+if (exists $ENV{'NIR'}) {
+    @ARGV = (
+        split(' ', $ENV{NIR}), @ARGV
+    );
+}
+
+GetOptions(
+        @::getOptionsOptions
+) or exit 1;
+
+while (<>) {
+	$_ =~ s/($::commandLineOptions{'ipAddressRegexp'}|$::commandLineOptions{'hostnameRegexp'})/&resolveMe($1)/ge;
+	print $_;
+}
+
+sub resolveMe {
+	my ($string) = @_;
+
+	if (exists $::cache{$string}) { return $::cache{$string}; }
+
+	$::cache{$string} = $string;
+
+	if ($string =~ m/$::commandLineOptions{'ipAddressRegexp'}/) {
+
+		&debug("gethostbyaddr [$string]");
+
+		my $name;
+
+		eval {
+			alarm(0);
+			local $SIG{ALRM} = sub { die; };
+			alarm($::commandLineOptions{'timeout'});
+
+			my $inet_aton = inet_aton($string);
+
+			if (defined $inet_aton) {
+				$name = gethostbyaddr($inet_aton, AF_INET);
+			}
+
+			alarm(0);
+		};
+
+		if ($@) { 
+
+			&verbose("gethostbyaddr timeout [$string]");
+
+			return $::cache{$string}; 
+		}
+
+		if (defined $name) {
+			$::cache{$string} = $string . sprintf(
+				$::commandLineOptions{'format'}, 
+				$name
+			);
+		} 
+
+	}
+
+	if ($string =~ m/$::commandLineOptions{'hostnameRegexp'}/) {
+
+		&debug("inet_ntoa [$string]");
+
+		my @addresses = gethostbyname($string);
+		if (@addresses) {
+			@addresses = map {
+				inet_ntoa($_)
+			} @addresses[4 .. $#addresses];
+
+			if ($addresses[0] ne $string) {
+				$::cache{$string} = $string
+					. "[" . join(",", @addresses) . "]";
+			}
+
+		}	
+	}
+
+	return $::cache{$string};
+}
+
+sub verbose {
+	my ($message) = @_;
+
+	if (
+		exists $::commandLineOptions{'verbose'}
+	) {
+		print STDERR "VERBOSE: $message\n";
+	}
+}
+
+sub debug {
+	my ($message) = @_;
+
+	if (
+		exists $::commandLineOptions{'debug'}
+	) {
+		print STDERR "DEBUG: $message\n";
+	}
+}

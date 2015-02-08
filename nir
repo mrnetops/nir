@@ -1,34 +1,53 @@
 #!/usr/bin/env perl
 
+##
+## Mr Netops nifty inline resolver
+## Copyright 2013 Todd Jimenez - Todd.Jimenez@gmail.com
+## https://github.com/mrnetops/nir
+##
+
+##
+## This program is free software: you can redistribute it and/or modify
+## it under the terms of the GNU General Public License version 2 
+## as published by the Free Software Foundation
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program.  If not, see <http://www.gnu.org/licenses/gpl-2.0.html>.
+##
+
 use Socket qw(:all);
 use Getopt::Long;
 use Data::Dumper;
 use strict;
 use warnings;
 
-##
-## Mr Netops nifty inline resolver
-## Todd.Jimenez@gmail.com
-##
-
 %::commandLineOptions = (
 
-	##
-	## per http://stackoverflow.com/questions/106179/regular-expression-to-match-hostname-or-ip-address
-	##
-	## with some regexp bug fixes
-	## 	* reversed the ip address octet subregexp to ensure we do a greedy match on the last octet
-	##		otherwise we only match up to the first digit of the last octet.
-	##	* added + to the [A-Za-z] hostname subregexp to ensure we do greedy matching on the top level domain
-	##		otherwise we only match up to the first letter of the top level domain.
-	##	* escape "." to prevent it doing an any character match instead of a literal "." match
+##
+## Per http://stackoverflow.com/questions/106179/regular-expression-to-match-hostname-or-ip-address
+##
+## with some regexp bug fixes
+## 	* reversed the ip address octet subregexp to ensure we do a greedy
+##	  match on the last octet otherwise we only match up to the first digit
+##	  of the last octet.
+##	* added + to the [A-Za-z] hostname subregexp to ensure we do greedy
+##	  matching on the top level domain otherwise we only match up to the
+##	  first letter of the top level domain.
+##	* escape "." to prevent it doing an any character match instead of a
+##	  literal "." match
+##
 
 	'ipAddressRegexp' =>
 		'((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]|[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]|[0-9])',
 
-	##
-	## per http://stackoverflow.com/questions/53497/regular-expression-that-matches-valid-ipv6-addresses
-	##
+##
+## Per http://stackoverflow.com/questions/53497/regular-expression-that-matches-valid-ipv6-addresses
+##
 
 	'ipV6AddressRegexp' =>
 		'(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))',
@@ -39,7 +58,9 @@ use warnings;
 	'format' =>
 		'[%s]',
 	'timeout' =>
-		2,
+		5,
+	'find' => ('hostname', 'ipv4', 'ipv6', 'canonname'),
+	
 );
 
 ##
@@ -65,6 +86,7 @@ if ($@) {
 	'verbose!',
 	'debug!',
 	'timeout=i',
+	'find=s@',
 	'help|?',
 );
 
@@ -127,6 +149,13 @@ while (<>) {
 	print $_;
 }
 
+if (exists $::commandLineOptions{debug}) {
+	$Data::Dumper::Varname = 'Cache';
+	&debug(
+		Dumper(\%::cache)
+	);
+}
+
 sub resolveMe {
 	my ($string) = @_;
 
@@ -149,6 +178,14 @@ sub resolveMe {
 	}
 
 	return $::cache{$string};
+}
+
+sub resolveMe_hostname {
+	if ($::commandLineOptions{ipV6Support}) {
+		&resolveMe_getStarInfo('hostname', @_);
+	} else {
+		&resolveMe_gethostbyname(@_);
+	}
 }
 
 sub resolveMe_gethostbyname {
@@ -216,6 +253,8 @@ sub resolveMe_getStarInfo {
 		flags => AI_CANONNAME,
 	);
 
+	&debug("getaddrinfo [$string]");
+
 	my ($error, @addresses) = getaddrinfo(
 		$string, 
 		undef,
@@ -244,11 +283,15 @@ sub resolveMe_getStarInfo {
 
 			my ($err, $hostname) = getnameinfo($address->{addr}, $flags);
 
-			if ($hostname eq $string) { next; }
+			if ($hostname eq $string) { return; }
 
 			if ($type eq 'hostname') {
-				if ($address->{family} == AF_INET) { ++$information{ipv4}{$hostname}; }
-				if ($address->{family} == AF_INET6) { ++$information{ipv6}{$hostname}; }
+				if (
+					$address->{family} == AF_INET
+				) { ++$information{ipv4}{$hostname}; }
+				if (
+					$address->{family} == AF_INET6
+				) { ++$information{ipv6}{$hostname}; }
 			} else {
 				++$information{hostname}{$hostname};
 			}
@@ -260,23 +303,22 @@ sub resolveMe_getStarInfo {
 			&verbose("getnameinfo timeout [$string]: [$@]");
 		}
 
-		my @components;
+	}
 
-		foreach my $key (keys %information) {
-			foreach my $value (keys %{ $information{$key} }) {
-				if ($value eq $string) { next; }
-				#push(@components, "${key}:${value}");
-				push(@components, ${value});
-			}
+	my @components;
+
+	foreach my $key (keys %information) {
+		foreach my $value (keys %{ $information{$key} }) {
+			if ($value eq $string) { next; }
+			push(@components, ${value});
 		}
+	}
 
-		if (@components) {
-			$::cache{$string} = $string . sprintf(
-				$::commandLineOptions{'format'}, 
-				join(",", @components)
-			);
-		} 
-
+	if (@components) {
+		$::cache{$string} = $string . sprintf(
+			$::commandLineOptions{'format'}, 
+			join(",", @components)
+		);
 	}
 }
 

@@ -131,77 +131,85 @@ sub resolveMe {
 	my ($string) = @_;
 
 	if (exists $::cache{$string}) { return $::cache{$string}; }
-
 	$::cache{$string} = $string;
 
 	if ($string =~ m/$::commandLineOptions{'ipAddressRegexp'}/) {
-
-		&debug("gethostbyaddr [$string]");
-
-		my $name;
-
-		eval {
-			alarm(0);
-			local $SIG{ALRM} = sub { die; };
-			alarm($::commandLineOptions{'timeout'});
-
-			my $inet_aton = inet_aton($string);
-
-			if (defined $inet_aton) {
-				$name = gethostbyaddr($inet_aton, AF_INET);
-			}
-
-			alarm(0);
-		};
-
-		if ($@) { 
-
-			&verbose("gethostbyaddr timeout [$string]");
-
-			return $::cache{$string}; 
-		}
-
-		if (defined $name) {
-			$::cache{$string} = $string . sprintf(
-				$::commandLineOptions{'format'}, 
-				$name
-			);
-		} 
-
+		&resolveMe_gethostbyaddr($string);
 	}
 
 	if ($string =~ m/$::commandLineOptions{'hostnameRegexp'}/) {
-
-		&debug("inet_ntoa [$string]");
-
-		my @addresses = gethostbyname($string);
-		if (@addresses) {
-			@addresses = map {
-				inet_ntoa($_)
-			} @addresses[4 .. $#addresses];
-
-			if ($addresses[0] ne $string) {
-				$::cache{$string} = $string
-					. "[" . join(",", @addresses) . "]";
-			}
-
-		}	
+		#&resolveMe_gethostbyname($string);
+		&resolveMe_getStarInfo("hostname", $string);
 	}
 
 	if ($string =~ m/$::commandLineOptions{'ipV6AddressRegexp'}/) {
 
-		&getStarInfo("foo", $string);
+		&resolveMe_getStarInfo("foo", $string);
 
 	}
 
 	return $::cache{$string};
 }
 
+sub resolveMe_gethostbyname {
+	my ($string) = @_;
+
+	&debug("gethostbyname [$string]");
+
+	my @addresses = gethostbyname($string);
+	if (@addresses) {
+		@addresses = map {
+			inet_ntoa($_)
+		} @addresses[4 .. $#addresses];
+
+		if ($addresses[0] ne $string) {
+			$::cache{$string} = $string
+				. "[" . join(",", @addresses) . "]";
+		}
+	}	
+}
+
+sub resolveMe_gethostbyaddr {
+	my ($string) = @_;
+
+	&debug("gethostbyaddr [$string]");
+
+	my $name;
+
+	eval {
+		alarm(0);
+		local $SIG{ALRM} = sub { die; };
+		alarm($::commandLineOptions{'timeout'});
+
+		my $inet_aton = inet_aton($string);
+
+		if (defined $inet_aton) {
+			$name = gethostbyaddr($inet_aton, AF_INET);
+		}
+
+		alarm(0);
+	};
+
+	if ($@) { 
+
+		&verbose("gethostbyaddr timeout [$string]");
+
+		return $::cache{$string}; 
+	}
+
+	if (defined $name) {
+		$::cache{$string} = $string . sprintf(
+			$::commandLineOptions{'format'}, 
+			$name
+		);
+	} 
+}
+
 ##
 ## getaddrinfo / getnameinfo lookups
 ##
 
-sub getStarInfo {
+sub resolveMe_getStarInfo {
 	my ($type, $string) = @_;
 
 	my %hints = (
@@ -216,7 +224,7 @@ sub getStarInfo {
 
 	my %lookup;
 	my %information;
-	my $flags = 0;
+	my $flags = $type eq 'hostname' ? NI_NUMERICHOST : 0;
 
 	foreach my $address (@addresses) {
 
@@ -257,7 +265,8 @@ sub getStarInfo {
 		foreach my $key (keys %information) {
 			foreach my $value (keys %{ $information{$key} }) {
 				if ($value eq $string) { next; }
-				push(@components, "${key}:${value}");
+				#push(@components, "${key}:${value}");
+				push(@components, ${value});
 			}
 		}
 

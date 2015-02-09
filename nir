@@ -53,7 +53,7 @@ use warnings;
 	'ipV6AddressRegexp' =>
 		'(?^::(:[0-9a-fA-F]{1,4}){0,5}((:[0-9a-fA-F]{1,4}){1,2}|:((25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})))|[0-9a-fA-F]{1,4}:([0-9a-fA-F]{1,4}:([0-9a-fA-F]{1,4}:([0-9a-fA-F]{1,4}:([0-9a-fA-F]{1,4}:([0-9a-fA-F]{1,4}:([0-9a-fA-F]{1,4}:([0-9a-fA-F]{1,4}|:)|(:([0-9a-fA-F]{1,4})?|((25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2}))))|:(((25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2}))|[0-9a-fA-F]{1,4}(:[0-9a-fA-F]{1,4})?|))|(:((25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2}))|:[0-9a-fA-F]{1,4}(:((25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2}))|(:[0-9a-fA-F]{1,4}){0,2})|:))|((:[0-9a-fA-F]{1,4}){0,2}(:((25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2}))|(:[0-9a-fA-F]{1,4}){1,2})|:))|((:[0-9a-fA-F]{1,4}){0,3}(:((25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2}))|(:[0-9a-fA-F]{1,4}){1,2})|:))|((:[0-9a-fA-F]{1,4}){0,4}(:((25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2}))|(:[0-9a-fA-F]{1,4}){1,2})|:)))',
 
-			'hostnameRegexp' =>
+	'hostnameRegexp' =>
 		"(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\\.)+([A-Za-z]+|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])",
 		#"(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\\.)*([A-Za-z]+|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])",
 	'format' =>
@@ -83,6 +83,7 @@ if ($@) {
 	\%::commandLineOptions,
 	'ipAddressRegexp=s',
 	'hostnameRegexp=s',
+	'ipV6Support!',
 	'format=s',
 	'verbose!',
 	'debug!',
@@ -104,11 +105,9 @@ GetOptions(
 if (exists $::commandLineOptions{help}) {
     print "
 Mr. Netops nifty inline resolver
+
 options:
-	-ipAddressRegexp <regexp>
-		Specify an alternate ip address regular expression
-	-hostnameRegexp <regexp>
-		Specify an alternate hostname regular expression
+
 	-format
 		Specify alternate formatting for resolved values
 	-verbose
@@ -119,6 +118,17 @@ options:
 		Dns lookup timeout
 	-help
 		This
+
+advanced options:
+
+	-ipAddressRegexp <regexp>
+		Specify an alternate ip address regular expression
+	-hostnameRegexp <regexp>
+		Specify an alternate hostname regular expression
+	-ipV6Support
+		Manually enable ipv6 support
+	-noipV6Support
+		Manually disable ipv6 support
 ";
 	exit 0;
 }
@@ -151,33 +161,16 @@ while (<>) {
 	print $_;
 }
 
-#if (exists $::commandLineOptions{debug}) {
-#	$Data::Dumper::Varname = 'Cache';
-#	$Data::Dumper::Sortkeys = 1;
-#	&debug(
-#		Dumper(\%::cache)
-#	);
-#}
-
 sub resolveMe {
 	my ($string) = @_;
 
 	if (exists $::cache{$string}) { return $::cache{$string}; }
 	$::cache{$string} = $string;
 
-	if ($string =~ m/$::commandLineOptions{'ipAddressRegexp'}/) {
-		&resolveMe_gethostbyaddr($string);
-	}
-
 	if ($string =~ m/$::commandLineOptions{'hostnameRegexp'}/) {
-		#&resolveMe_gethostbyname($string);
-		&resolveMe_getStarInfo("hostname", $string);
-	}
-
-	if ($string =~ m/$::commandLineOptions{'ipV6AddressRegexp'}/) {
-
-		&resolveMe_getStarInfo("foo", $string);
-
+		&resolveMe_hostname($string);
+	} else {
+		&resolveMe_ipAddress($string);
 	}
 
 	return $::cache{$string};
@@ -188,6 +181,14 @@ sub resolveMe_hostname {
 		&resolveMe_getStarInfo('hostname', @_);
 	} else {
 		&resolveMe_gethostbyname(@_);
+	}
+}
+
+sub resolveMe_ipAddress {
+	if ($::commandLineOptions{ipV6Support}) {
+		&resolveMe_getStarInfo("ip", @_);
+	} else {
+		&resolveMe_gethostbyaddr(@_);
 	}
 }
 
@@ -279,33 +280,27 @@ sub resolveMe_getStarInfo {
 			++$information{canonname}{ $address->{canonname} };
 		}
 
+		my ($err, $hostname);
 		eval {
 			alarm(0);
 			local $SIG{ALRM} = sub { die; };
 			alarm($::commandLineOptions{'timeout'});
 
-			my ($err, $hostname) = getnameinfo($address->{addr}, $flags);
-
-			if ($hostname eq $string) { return; }
-
-			if ($type eq 'hostname') {
-				if (
-					$address->{family} == AF_INET
-				) { ++$information{ipv4}{$hostname}; }
-				if (
-					$address->{family} == AF_INET6
-				) { ++$information{ipv6}{$hostname}; }
-			} else {
-				++$information{hostname}{$hostname};
-			}
+			($err, $hostname) = getnameinfo($address->{addr}, $flags);
 
 			alarm(0);
 		};
 
-		if ($@) { 
-			&verbose("getnameinfo timeout [$string]: [$@]");
+		if ($@ || $err) { 
+			&verbose("getnameinfo error [$string]: [$@$err]");
+		} else {
+			if ($type eq 'hostname') {
+				if ($address->{family} == AF_INET) { ++$information{ipv4}{$hostname}; }
+				if ($address->{family} == AF_INET6) { ++$information{ipv6}{$hostname}; }
+			} else {
+				++$information{hostname}{$hostname};
+			}
 		}
-
 	}
 
 	my @components;
@@ -323,6 +318,10 @@ sub resolveMe_getStarInfo {
 			join(",", @components)
 		);
 	}
+}
+
+sub format {
+	my ($string) = @_;
 }
 
 sub verbose {

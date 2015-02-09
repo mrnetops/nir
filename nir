@@ -27,6 +27,13 @@ use Data::Dumper;
 use strict;
 use warnings;
 
+##
+## nasty way to address ipv6 Socket constants not being present in older
+## Socket libraries
+##
+
+no strict "subs";
+
 %::commandLineOptions = (
 
 ##
@@ -78,8 +85,6 @@ eval {
 
 if ($@) { 
 	$::commandLineOptions{ipV6Support} = 0;
-	use constant AI_CANONNAME => 0;
-	use constant NI_NUMERICHOST => 0;
 } else {
 	$::commandLineOptions{ipV6Support} = 1;
 }

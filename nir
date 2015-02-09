@@ -58,6 +58,10 @@ use warnings;
 		#"(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\\.)*([A-Za-z]+|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])",
 	'format' =>
 		'[%s]',
+	'separator' =>
+		',',
+	'tags' =>
+		0,
 	'timeout' =>
 		5,
 	'find' => ['hostname', 'ipv4', 'ipv6', 'canonname'],
@@ -85,6 +89,8 @@ if ($@) {
 	'hostnameRegexp=s',
 	'ipV6Support!',
 	'format=s',
+	'separator=s',
+	'tags!',
 	'verbose!',
 	'debug!',
 	'timeout=i',
@@ -110,6 +116,10 @@ options:
 
 	-format
 		Specify alternate formatting for resolved values
+	-separator
+		Specify alternate formatting for lookups with multiple values
+	-tags
+		Add type tags to values
 	-verbose
 		Print additional status information to stderr
 	-debug
@@ -164,8 +174,7 @@ while (<>) {
 sub resolveMe {
 	my ($string) = @_;
 
-	if (exists $::cache{$string}) { return $::cache{$string}; }
-	$::cache{$string} = $string;
+	if (exists $::cache{$string}) { return $::cache{$string}{'formatted'}; }
 
 	if ($string =~ m/$::commandLineOptions{'hostnameRegexp'}/) {
 		&resolveMe_hostname($string);
@@ -173,7 +182,8 @@ sub resolveMe {
 		&resolveMe_ipAddress($string);
 	}
 
-	return $::cache{$string};
+	&format($string);
+	return $::cache{$string}{'formatted'};
 }
 
 sub resolveMe_hostname {
@@ -204,8 +214,9 @@ sub resolveMe_gethostbyname {
 		} @addresses[4 .. $#addresses];
 
 		if ($addresses[0] ne $string) {
-			$::cache{$string} = $string
-				. "[" . join(",", @addresses) . "]";
+			foreach my $address (@addresses) {
+				++$::cache{$string}{'resolved'}{'ipv4'}{$address};
+			}
 		}
 	}	
 }
@@ -239,10 +250,7 @@ sub resolveMe_gethostbyaddr {
 	}
 
 	if (defined $name) {
-		$::cache{$string} = $string . sprintf(
-			$::commandLineOptions{'format'}, 
-			$name
-		);
+		++$::cache{$string}{'resolved'}{'hostname'}{$name};
 	} 
 }
 
@@ -277,7 +285,9 @@ sub resolveMe_getStarInfo {
 		if (
 			$address->{canonname}
 		) {
-			++$information{canonname}{ $address->{canonname} };
+			++$::cache{$string}{'resolved'}{'canonname'}{
+				$address->{canonname}
+			};
 		}
 
 		my ($err, $hostname);
@@ -295,33 +305,53 @@ sub resolveMe_getStarInfo {
 			&verbose("getnameinfo error [$string]: [$@$err]");
 		} else {
 			if ($type eq 'hostname') {
-				if ($address->{family} == AF_INET) { ++$information{ipv4}{$hostname}; }
-				if ($address->{family} == AF_INET6) { ++$information{ipv6}{$hostname}; }
+				if ($address->{family} == AF_INET) {
+					++$::cache{$string}{'resolved'}{'ipv4'}{$hostname};
+				}
+				if ($address->{family} == AF_INET6) {
+					++$::cache{$string}{'resolved'}{'ipv6'}{$hostname};
+				}
 			} else {
-				++$information{hostname}{$hostname};
+				++$::cache{$string}{'resolved'}{'hostname'}{$hostname};
 			}
 		}
-	}
-
-	my @components;
-
-	foreach my $key (keys %information) {
-		foreach my $value (keys %{ $information{$key} }) {
-			if ($value eq $string) { next; }
-			push(@components, ${value});
-		}
-	}
-
-	if (@components) {
-		$::cache{$string} = $string . sprintf(
-			$::commandLineOptions{'format'}, 
-			join(",", @components)
-		);
 	}
 }
 
 sub format {
 	my ($string) = @_;
+
+	unless(exists $::cache{$string}{'resolved'}) {
+		$::cache{$string}{'formatted'} = $string;
+		return;
+	}
+
+	my @elements;
+	foreach my $type (
+		keys %{ 
+			$::cache{$string}{'resolved'}
+		}
+	) {
+		foreach my $address (
+			keys %{
+				$::cache{$string}{'resolved'}{$type}
+			}
+		) {
+			if ($string eq $address) { next; }
+			if ($::commandLineOptions{'tags'}) {
+				push(@elements, "${type}:${address}");
+			} else {
+				push(@elements, $address);
+			}
+		}
+	}
+
+	if (@elements) {
+		$::cache{$string}{'formatted'} = $string . sprintf(
+			$::commandLineOptions{'format'},
+			join($::commandLineOptions{'separator'}, @elements)
+		);
+	}
 }
 
 sub verbose {

@@ -64,8 +64,6 @@ use warnings;
 		0,
 	'timeout' =>
 		5,
-	'find' => ['hostname', 'ipv4', 'ipv6', 'canonname'],
-	
 );
 
 ##
@@ -94,7 +92,7 @@ if ($@) {
 	'verbose!',
 	'debug!',
 	'timeout=i',
-	'find=s@',
+	'lookup=s@',
 	'help|?',
 );
 
@@ -107,6 +105,20 @@ if (exists $ENV{'NIR'}) {
 GetOptions(
         @::getOptionsOptions
 ) or exit 1;
+
+unless (exists $::commandLineOptions{lookup}) {
+	$::commandLineOptions{lookup} = ['hostname', 'ipv4', 'ipv6', 'canonname'],
+}
+
+$::commandLineOptions{lookup} = [
+	split(
+		/,/, 
+		join(
+			',', 
+			@{ $::commandLineOptions{lookup} }
+		)
+	)
+];
 
 if (exists $::commandLineOptions{help}) {
     print "
@@ -126,6 +138,8 @@ options:
 		Print debugging information to stderr
 	-timeout
 		Dns lookup timeout
+	-lookup
+		Type of lookup values and thier presentation order
 	-help
 		This
 
@@ -328,10 +342,9 @@ sub format {
 
 	my @elements;
 	foreach my $type (
-		keys %{ 
-			$::cache{$string}{'resolved'}
-		}
+		@{ $::commandLineOptions{'lookup'} }
 	) {
+		unless (exists $::cache{$string}{'resolved'}{$type}) { next; }
 		foreach my $address (
 			keys %{
 				$::cache{$string}{'resolved'}{$type}
@@ -351,6 +364,8 @@ sub format {
 			$::commandLineOptions{'format'},
 			join($::commandLineOptions{'separator'}, @elements)
 		);
+	} else {
+		$::cache{$string}{'formatted'} = $string;
 	}
 }
 

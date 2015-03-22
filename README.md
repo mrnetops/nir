@@ -1,6 +1,6 @@
-If you have ever needed to resolve hostnames or ip address in arbitrarily formatted data, *nir is the script for you.
+If you have ever needed to resolve hostnames or ip address in arbitrarily formatted data, **nir** is the script for you.
 
-Mr. Netops's nifty inline resolver (https://github.com/mrnetops/nir) will detect the following types of values
+**Mr. Netops's nifty inline resolver** (https://github.com/mrnetops/nir) will detect the following types of values
 
 * Hostnames
 * IPv4 Addresses
@@ -11,7 +11,7 @@ in arbitrarily formatted data from standard in and will perform inline resolutio
 * Hostnames
 * IPv4 Addresses
 * IPv6 Addresses
-* getaddrinfo canonname
+* [getaddrinfo canonname](http://linux.die.net/man/3/getaddrinfo)
 
 Some trivial examples
 
@@ -96,7 +96,7 @@ $ echo "www.amazon.com" | nir | nir
 www.amazon.com[176.32.98.166][205.251.242.103[s3-console-us-standard.console.aws.amazon.com]]
 ```
 
-Usage information from *nir --help*
+Usage information from **nir --help**
 
 ```
 Mr. Netops's nifty inline resolver

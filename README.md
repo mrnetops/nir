@@ -68,7 +68,7 @@ Great for checking
 The list goes on.
 
 For example
-```markdown
+```
 cat someConfig | nir
 pool public {
       ipAddress1[hostname1]
@@ -77,21 +77,21 @@ pool public {
 }
 
 object-group network host_name_4
- network-object host ipAddress4[<b>wrongHostname</b>]
+ network-object host ipAddress4[**wrongHostname**]
 ```
 or
 ```
 cat someConfig | nir
 pool public {
       hostname1[ipAddress1]
-      hostname2[<b>wrongSubnetIp</b>]
+      hostname2[**wrongSubnetIp**]
       hostname3[ipAddress3]
 }
 ```
 
 You can chain nir to inspect forward and reverse lookup
 
-```
+```bash
 $ echo "www.amazon.com" | nir | nir
 www.amazon.com[176.32.98.166][205.251.242.103[s3-console-us-standard.console.aws.amazon.com]]
 ```

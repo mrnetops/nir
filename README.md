@@ -27,29 +27,29 @@ How about something a little more fun?
 ```
 $ dig facebook.com ANY | nir
 
-; &lt;&lt;&gt;&gt; DiG 9.9.5-3ubuntu0.1-Ubuntu &lt;&lt;&gt;&gt; facebook.com[173.252.120.6,2a03:2880:2130:cf05:face:b00c:0:1] ANY
+; <<>> DiG 9.9.5-3ubuntu0.2-Ubuntu <<>> facebook.com[173.252.120.6,2a03:2880:2130:cf05:face:b00c:0:1] ANY
 ;; global options: +cmd
 ;; Got answer:
-;; -&gt;&gt;HEADER&lt;&lt;- opcode: QUERY, status: NOERROR, id: 55201
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 37696
 ;; flags: qr rd ra; QUERY: 1, ANSWER: 7, AUTHORITY: 0, ADDITIONAL: 1
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 512
 ;; QUESTION SECTION:
-;facebook.com[173.252.120.6,2a03:2880:2130:cf05:face:b00c:0:1].INANY
+;facebook.com[173.252.120.6,2a03:2880:2130:cf05:face:b00c:0:1].			IN	ANY
 
 ;; ANSWER SECTION:
-facebook.com[173.252.120.6,2a03:2880:2130:cf05:face:b00c:0:1].21599INNSa.ns.facebook.com[69.171.239.12].
-facebook.com[173.252.120.6,2a03:2880:2130:cf05:face:b00c:0:1].21599INNSb.ns.facebook.com[69.171.255.12].
-facebook.com[173.252.120.6,2a03:2880:2130:cf05:face:b00c:0:1].21599INTXTv=spf1 redirect=_spf.facebook.com
-facebook.com[173.252.120.6,2a03:2880:2130:cf05:face:b00c:0:1].299INMX10 msgin.vvv.facebook.com[173.252.113.23].
-facebook.com[173.252.120.6,2a03:2880:2130:cf05:face:b00c:0:1].119INSOAa.ns.facebook.com[69.171.239.12]. dns.facebook.com[31.13.70.1,2a03:2880:f00d:1:face:b00c:0:1,star.c10r.facebook.com]. 1423476020 7200 1800 604800 120
-facebook.com[173.252.120.6,2a03:2880:2130:cf05:face:b00c:0:1].899INA173.252.120.6[edge-star-shv-12-frc3.facebook.com]
-facebook.com[173.252.120.6,2a03:2880:2130:cf05:face:b00c:0:1].899INAAAA2a03:2880:2130:cf05:face:b00c:0:1[edge-star6-shv-12-frc3.facebook.com]
+facebook.com[173.252.120.6,2a03:2880:2130:cf05:face:b00c:0:1].		21578	IN	NS	a.ns.facebook.com[69.171.239.12].
+facebook.com[173.252.120.6,2a03:2880:2130:cf05:face:b00c:0:1].		21578	IN	NS	b.ns.facebook.com[69.171.255.12].
+facebook.com[173.252.120.6,2a03:2880:2130:cf05:face:b00c:0:1].		21578	IN	TXT	"v=spf1 redirect=_spf.facebook.com"
+facebook.com[173.252.120.6,2a03:2880:2130:cf05:face:b00c:0:1].		278	IN	MX	10 msgin.vvv.facebook.com[173.252.113.23].
+facebook.com[173.252.120.6,2a03:2880:2130:cf05:face:b00c:0:1].		98	IN	SOA	a.ns.facebook.com[69.171.239.12]. dns.facebook.com[31.13.77.6,2a03:2880:f022:6:face:b00c:0:2,star.c10r.facebook.com]. 1426982281 7200 1800 604800 120
+facebook.com[173.252.120.6,2a03:2880:2130:cf05:face:b00c:0:1].		878	IN	A	173.252.120.6
+facebook.com[173.252.120.6,2a03:2880:2130:cf05:face:b00c:0:1].		878	IN	AAAA	2a03:2880:2130:cf05:face:b00c:0:1
 
-;; Query time: 48 msec
-;; SERVER: 8.8.8.8[google-public-dns-a.google.com]#53(8.8.8.8[google-public-dns-a.google.com])
-;; WHEN: Mon Feb 09 02:04:07 PST 2015
+;; Query time: 43 msec
+;; SERVER: 8.8.8.8#53(8.8.8.8)
+;; WHEN: Sat Mar 21 17:00:32 PDT 2015
 ;; MSG SIZE  rcvd: 232
 ```
 
@@ -78,9 +78,9 @@ pool public {
 
 object-group network host_name_4
  network-object host ipAddress4[<b>wrongHostname</b>]
-</pre>
+```
 or
-<pre class="prettyprint">
+```
 cat someConfig | nir
 pool public {
       hostname1[ipAddress1]
@@ -103,53 +103,53 @@ Mr. Netops's nifty inline resolver
 
 Options:
 
-      -format &lt;format&gt;
-            Specify alternate formatting for resolved values
-      -separator &lt;separator&gt;
-            Specify alternate separator for lookups with multiple values
-      -tags
-            Add type tags to resolved values
-      -verbose
-            Print additional status information to stderr
-      -debug
-            Print debugging information to stderr
-      -timeout &lt;timeout&gt;
-            Dns lookup timeout
-      -lookup &lt;types&gt;
-            Types of resolved values and their presentation order
-            Supports The following types: hostname, ipv4, ipv6, canonname
-      -help
-            This
+	-format <format>
+		Specify alternate formatting for resolved values
+	-separator <separator>
+		Specify alternate separator for lookups with multiple values
+	-tags
+		Add type tags to resolved values
+	-verbose
+		Print additional status information to stderr
+	-debug
+		Print debugging information to stderr
+	-timeout <timeout>
+		Dns lookup timeout
+	-lookup <types>
+		Types of resolved values and their presentation order
+		Supports The following types: hostname, ipv4, ipv6, canonname
+	-help
+		This
 
 Advanced Options:
 
-      -hostnameRegexp &lt;regexp&gt;
-            Specify an alternate hostname regular expression
-      -ipV4AddressRegexp &lt;regexp&gt;
-            Specify an alternate ipv4 address regular expression
-      -ipV6AddressRegexp &lt;regexp&gt;
-            Specify an alternate ipv6 address regular expression
-      -ipV6Support
-            Manually enable ipv6 support
-      -noipV6Support
-            Manually disable ipv6 support
+	-hostnameRegexp <regexp>
+		Specify an alternate hostname regular expression
+	-ipV4AddressRegexp <regexp>
+		Specify an alternate ipv4 address regular expression
+	-ipV6AddressRegexp <regexp>
+		Specify an alternate ipv6 address regular expression
+	-ipV6Support
+		Manually enable ipv6 support
+	-noipV6Support
+		Manually disable ipv6 support
 
 Examples:
 
-      Basic invocation
-            someCommand | nir
+	Basic invocation
+		someCommand | nir
 
-      Present ipv4 & ipv6 resolved values in that order
-            someCommand | nir -lookup ipv4,ipv6
+	Present ipv4 & ipv6 resolved values in that order
+		someCommand | nir -lookup ipv4,ipv6
 
-      Format inline lookups in curly braces and seperate values with ;
-            someCommand | nir -format '{%s}' -separator ';'
+	Format inline lookups in curly braces and seperate values with ;
+		someCommand | nir -format '{%s}' -separator ';'
 
 Use Cases:
-                  
-      dig facebook.com ANY | nir
-      mtr -wr facebook.com | nir
-      cat /etc/hosts | nir
-      arp -a | nir
+			
+	dig facebook.com ANY | nir
+	mtr -wr facebook.com | nir
+	cat /etc/hosts | nir
+	arp -a | nir
+```	
 
-```

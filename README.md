@@ -24,7 +24,7 @@ www.google.com[216.58.216.4,2607:f8b0:4007:809::2004]216.58.216.36[lax02s22-in-f
 ```
 
 How about something a little more fun?
-```
+```bash
 $ dig facebook.com ANY | nir
 
 ; <<>> DiG 9.9.5-3ubuntu0.2-Ubuntu <<>> facebook.com[173.252.120.6,2a03:2880:2130:cf05:face:b00c:0:1] ANY
@@ -68,11 +68,11 @@ Great for checking
 The list goes on.
 
 For example
-```
+```markdown
 cat someConfig | nir
 pool public {
       ipAddress1[hostname1]
-      ipAddress2[<b>wrongHostname</b>]
+      ipAddress2[**wrongHostname**]
       ipAddress3[hostname3]
 }
 

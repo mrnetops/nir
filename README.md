@@ -1,6 +1,8 @@
+# Mr. Netops's nifty inline resolver
+
 If you have ever needed to resolve hostnames or ip address in arbitrarily formatted data, **nir** is the script for you.
 
-**Mr. Netops's nifty inline resolver** (https://github.com/mrnetops/nir) will detect the following types of values
+**nir** will detect the following types of values
 
 * Hostnames
 * IPv4 Addresses

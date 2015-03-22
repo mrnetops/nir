@@ -68,7 +68,7 @@ Great for checking
 The list goes on.
 
 For example
-```
+```markdown
 cat someConfig | nir
 pool public {
       ipAddress1[hostname1]
@@ -80,7 +80,7 @@ object-group network host_name_4
  network-object host ipAddress4[**wrongHostname**]
 ```
 or
-```
+```markdown
 cat someConfig | nir
 pool public {
       hostname1[ipAddress1]

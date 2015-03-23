@@ -17,7 +17,7 @@ in arbitrarily formatted data from standard in and will perform inline resolutio
 
 Some trivial examples
 
-```bash
+```
 <pre>
 $ echo "fi fi fo www.google.com fum" | nir
 fi fi fo www.google.com<b>[216.58.216.36,2607:f8b0:4007:805::1012]</b> fum

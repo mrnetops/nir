@@ -18,13 +18,11 @@ in arbitrarily formatted data from standard in and will perform inline resolutio
 Some trivial examples
 
 ```
-<pre>
 $ echo "fi fi fo www.google.com fum" | nir
-fi fi fo www.google.com<b>[216.58.216.36,2607:f8b0:4007:805::1012]</b> fum
+fi fi fo www.google.com`**`[216.58.216.36,2607:f8b0:4007:805::1012]`**` fum
 
 $ echo "www.google.com216.58.216.36" | nir
 www.google.com<b>[216.58.216.4,2607:f8b0:4007:809::2004]</b>216.58.216.36<b>[lax02s22-in-f4.1e100.net]</b>
-</pre>
 ```
 
 How about something a little more fun?

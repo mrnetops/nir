@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 
 ##
-## Mr Netops's nifty inline resolver
+## Mr. Netops's nifty inline resolver
 ## Copyright 2013 Todd Jimenez - Todd.Jimenez@gmail.com
 ## https://github.com/mrnetops/nir
 ##
@@ -26,6 +26,8 @@ use Getopt::Long;
 use Data::Dumper;
 use strict;
 use warnings;
+
+$| = 1;
 
 ##
 ## nasty way to address ipv6 Socket constants not being present in older
@@ -176,20 +178,20 @@ Advanced Options:
 Examples:
 
 	Basic invocation
-		someCommand | $0
+		someCommand | nir
 
 	Present ipv4 & ipv6 resolved values in that order
-		someCommand | $0 -lookup ipv4,ipv6
+		someCommand | nir -lookup ipv4,ipv6
 
 	Format inline lookups in curly braces and seperate values with ;
-		someCommand | $0 -format '{%s}' -separator ';'
+		someCommand | nir -format '{%s}' -separator ';'
 
 Use Cases:
 			
-	dig facebook.com ANY | $0
-	mtr -wr facebook.com | $0
-	cat /etc/hosts | $0
-	arp -a | $0
+	dig facebook.com ANY | nir
+	mtr -wr facebook.com | nir
+	cat /etc/hosts | nir
+	arp -a | nir
 	
 ";
 	exit 0;
